@@ -12,6 +12,9 @@ public class FileEntity {
     @Column(name = "id")
     private Integer id;
 
+    @Column(name = "path")
+    private String path;
+
     @Column(name = "file_name")
     private String fileName;
 }
