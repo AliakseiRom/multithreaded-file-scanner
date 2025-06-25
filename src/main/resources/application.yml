@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: Multithreaded scanner file
+  datasource:
+    url: "${DATASOURCE_URL}" #jdbc:postgresql://localhost:5432/file_scanner
+    username: "${DATASOURCE_USERNAME}" #postgres
+    password: "${DATASOURCE_PASSWORD}" #postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        ddl-auto: update
+        dialect: "org.hibernate.dialect.PostgreSQLDialect"
+
+
+
