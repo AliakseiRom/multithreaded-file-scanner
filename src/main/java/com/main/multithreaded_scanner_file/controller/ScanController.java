@@ -1,6 +1,6 @@
 package com.main.multithreaded_scanner_file.controller;
 
-import com.main.multithreaded_scanner_file.dto.FileMBRequestDTO;
+import com.main.multithreaded_scanner_file.dto.FileKBRequestDTO;
 import com.main.multithreaded_scanner_file.dto.FileRequestDTO;
 import com.main.multithreaded_scanner_file.dto.FileResponseDTO;
 import com.main.multithreaded_scanner_file.service.ScanService;
@@ -26,10 +26,10 @@ public class ScanController {
     }
 
     @GetMapping("/kb")
-    public ResponseEntity<FileResponseDTO> fileScanMB (@RequestBody FileMBRequestDTO fileRequestDTO) {
+    public ResponseEntity<FileResponseDTO> fileScanKB(@RequestBody FileKBRequestDTO fileRequestDTO) {
         return new ResponseEntity<>(scanService.scan(
                 fileRequestDTO.path(),
-                fileRequestDTO.mb()
+                fileRequestDTO.kb()
         ), HttpStatus.OK);
     }
 }

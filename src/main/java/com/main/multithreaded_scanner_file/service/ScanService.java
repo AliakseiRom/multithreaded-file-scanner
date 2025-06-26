@@ -27,7 +27,7 @@ public class ScanService {
     @Autowired
     private FileMapper fileMapper;
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(20);
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     public FileResponseDTO scan(String path, String mask) {
         List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
@@ -38,26 +38,26 @@ public class ScanService {
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
-    public FileResponseDTO scan(String path, Long[] mb) {
+    public FileResponseDTO scan(String path, Long[] kb) {
         List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
 
-        CompletableFuture<Void> future = scanRecursive(Path.of(path), mb, currentScanResults);
+        CompletableFuture<Void> future = scanRecursive(Path.of(path), kb, currentScanResults);
         future.join();
 
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
     //By MB
-    private CompletableFuture<Void> scanRecursive(Path dir, Long[] mb, List<FileEntity> currentScanResults) {
+    private CompletableFuture<Void> scanRecursive(Path dir, Long[] kb, List<FileEntity> currentScanResults) {
         return CompletableFuture.runAsync(() -> {
             ArrayList<CompletableFuture<Void>> subTasks = new ArrayList<>();
 
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
                 for (Path entry : stream) {
                     if (Files.isDirectory(entry)) {
-                        subTasks.add(scanRecursive(entry, mb, currentScanResults));
+                        subTasks.add(scanRecursive(entry, kb, currentScanResults));
                     } else {
-                        if (matchesMBBorders(entry, mb)) {
+                        if (matchesKBBorders(entry, kb)) {
                             FileEntity fileEntity = new FileEntity();
                             fileEntity.setFileName(entry.getFileName().toString());
                             fileEntity.setPath(entry.toString());
@@ -105,13 +105,15 @@ public class ScanService {
         }, executor);
     }
 
+    //By mask
     private boolean matchesMask(String fileName, String mask) {
         String regex = mask.replace(".", "\\.").replace("*", ".*");
         return fileName.matches(regex);
     }
 
-    private boolean matchesMBBorders(Path dir, Long[] mb) throws IOException {
+    //By kb borders
+    private boolean matchesKBBorders(Path dir, Long[] kb) throws IOException {
         Long sizeInKB = Files.size(dir) / 1024;
-        return sizeInKB <= mb[1] && sizeInKB >= mb[0];
+        return sizeInKB <= kb[1] && sizeInKB >= kb[0];
     }
 }
