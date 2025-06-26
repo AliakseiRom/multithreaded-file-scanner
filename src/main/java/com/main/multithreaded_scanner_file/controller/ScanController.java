@@ -1,9 +1,6 @@
 package com.main.multithreaded_scanner_file.controller;
 
-import com.main.multithreaded_scanner_file.dto.FileKBAndMaskRequestDTO;
-import com.main.multithreaded_scanner_file.dto.FileKBRequestDTO;
-import com.main.multithreaded_scanner_file.dto.FileRequestDTO;
-import com.main.multithreaded_scanner_file.dto.FileResponseDTO;
+import com.main.multithreaded_scanner_file.dto.*;
 import com.main.multithreaded_scanner_file.service.ScanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,6 +40,14 @@ public class ScanController {
                 fileKBAndMaskRequestDTO.path(),
                 fileKBAndMaskRequestDTO.mask(),
                 fileKBAndMaskRequestDTO.kb()
+        ), HttpStatus.OK);
+    }
+
+    @GetMapping("/time")
+    public ResponseEntity<FileResponseDTO> fileScanTime (@RequestBody FileDataRequestDTO fileDataRequestDTO) {
+        return new ResponseEntity<>(scanService.scanTime(
+                fileDataRequestDTO.path(),
+                fileDataRequestDTO.time()
         ), HttpStatus.OK);
     }
 }
