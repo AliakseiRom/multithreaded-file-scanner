@@ -27,8 +27,9 @@ public class ScanService {
     @Autowired
     private FileMapper fileMapper;
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = Executors.newFixedThreadPool(50);
 
+    //By mask
     public FileResponseDTO scan(String path, String mask) {
         List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
 
@@ -38,6 +39,7 @@ public class ScanService {
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
+    //By KB
     public FileResponseDTO scan(String path, Long[] kb) {
         List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
 
@@ -46,6 +48,18 @@ public class ScanService {
 
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
+
+    //By KB and mask
+    public FileResponseDTO scan(String path, String mask, Long[] kb) {
+        List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
+
+        CompletableFuture<Void> future = scanRecursive(Path.of(path), mask, kb, currentScanResults);
+        future.join();
+
+        return fileMapper.toResponseDTO(path, currentScanResults);
+    }
+
+    /// //////////////////////////////////////////////////////////////////////////
 
     //By MB
     private CompletableFuture<Void> scanRecursive(Path dir, Long[] kb, List<FileEntity> currentScanResults) {
@@ -76,6 +90,8 @@ public class ScanService {
         }, executor);
     }
 
+    /// ////////////////////////////////////////////////////////////////////////////////
+
     //By mask
     private CompletableFuture<Void> scanRecursive(Path dir, String mask, List<FileEntity> currentScanResults) {
         return CompletableFuture.runAsync(() -> {
@@ -93,6 +109,39 @@ public class ScanService {
 
                             fileEntity = fileRepository.save(fileEntity);
                             currentScanResults.add(fileEntity);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error while scanning files", e);
+            }
+
+            CompletableFuture.allOf(subTasks.toArray(new CompletableFuture[0])).join();
+
+        }, executor);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    //By KB and mask
+    private CompletableFuture<Void> scanRecursive(Path dir, String mask, Long[] kb, List<FileEntity> currentScanResults) {
+        return CompletableFuture.runAsync(() -> {
+            ArrayList<CompletableFuture<Void>> subTasks = new ArrayList<>();
+
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+                for (Path entry : stream) {
+                    if (Files.isDirectory(entry)) {
+                        subTasks.add(scanRecursive(entry, mask, kb, currentScanResults));
+                    } else {
+                        if (matchesMask(String.valueOf(entry.getFileName()), mask)) {
+                            if (matchesKBBorders(entry, kb)) {
+                                FileEntity fileEntity = new FileEntity();
+                                fileEntity.setFileName(entry.getFileName().toString());
+                                fileEntity.setPath(entry.toString());
+
+                                fileEntity = fileRepository.save(fileEntity);
+                                currentScanResults.add(fileEntity);
+                            }
                         }
                     }
                 }
