@@ -35,4 +35,13 @@ public class FileMatcher {
 
         return fileLastModified <= compareTime;
     }
+
+    //By content
+    public static boolean matchesContent(Path dir, String content) {
+        try (var lines = Files.lines(dir)) {
+            return lines.anyMatch(line -> line.contains(content));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

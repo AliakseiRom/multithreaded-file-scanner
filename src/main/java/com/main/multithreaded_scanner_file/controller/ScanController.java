@@ -50,4 +50,12 @@ public class ScanController {
                 fileDataRequestDTO.time()
         ), HttpStatus.OK);
     }
+
+    @GetMapping("/content")
+    public ResponseEntity<FileResponseDTO> fileScanContent (@RequestBody FileContentRequestDTO fileContentRequestDTO) {
+        return new ResponseEntity<>(scanService.scanContent(
+                fileContentRequestDTO.path(),
+                fileContentRequestDTO.content()
+        ), HttpStatus.OK);
+    }
 }

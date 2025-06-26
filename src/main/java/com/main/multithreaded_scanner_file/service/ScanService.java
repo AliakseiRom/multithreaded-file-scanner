@@ -70,6 +70,18 @@ public class ScanService {
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
+    public FileResponseDTO scanContent(String path, String content) {
+        List<FileEntity> currentScanResults = Collections.synchronizedList(new ArrayList<>());
+
+        String mask = "*.txt";
+
+        CompletableFuture<Void> future = scanRecursive(Path.of(path), content, mask, currentScanResults);
+        future.join();
+
+        return fileMapper.toResponseDTO(path, currentScanResults);
+    }
+
+
     /// //////////////////////////////////////////////////////////////////////////
 
     //By KB
@@ -184,6 +196,39 @@ public class ScanService {
 
                             fileEntity = fileRepository.save(fileEntity);
                             currentScanResults.add(fileEntity);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error while scanning files", e);
+            }
+
+            CompletableFuture.allOf(subTasks.toArray(new CompletableFuture[0])).join();
+
+        }, executor);
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////
+
+    //By content
+    private CompletableFuture<Void> scanRecursive(Path dir, String content, String mask, List<FileEntity> currentScanResults) {
+        return CompletableFuture.runAsync(() -> {
+            ArrayList<CompletableFuture<Void>> subTasks = new ArrayList<>();
+
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+                for (Path entry : stream) {
+                    if (Files.isDirectory(entry)) {
+                        subTasks.add(scanRecursive(entry, content, mask, currentScanResults));
+                    } else {
+                        if (FileMatcher.matchesMask(String.valueOf(entry.getFileName()), mask)) {
+                            if (FileMatcher.matchesContent(entry, content)) {
+                                FileEntity fileEntity = new FileEntity();
+                                fileEntity.setFileName(entry.getFileName().toString());
+                                fileEntity.setPath(entry.toString());
+
+                                fileEntity = fileRepository.save(fileEntity);
+                                currentScanResults.add(fileEntity);
+                            }
                         }
                     }
                 }
