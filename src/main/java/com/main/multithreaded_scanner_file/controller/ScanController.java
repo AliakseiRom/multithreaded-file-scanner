@@ -58,4 +58,10 @@ public class ScanController {
                 fileContentRequestDTO.content()
         ), HttpStatus.OK);
     }
+
+    @GetMapping("/cancel")
+    public ResponseEntity<String> cancelScan () {
+        scanService.cancelRequest();
+        return new ResponseEntity<>("Request cancelled", HttpStatus.OK);
+    }
 }
