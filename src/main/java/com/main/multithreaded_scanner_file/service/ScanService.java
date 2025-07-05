@@ -185,12 +185,18 @@ public class ScanService {
                     } else {
                         try {
                             if (FileMatcher.matchesKBBorders(entry, kb)) {
-                                FileEntity fileEntity = new FileEntity();
-                                fileEntity.setFileName(entry.getFileName().toString());
-                                fileEntity.setPath(entry.toString());
+                                if (!fileRepository.existsByPath(String.valueOf(entry))) {
+                                    FileEntity fileEntity = new FileEntity();
+                                    fileEntity.setFileName(entry.getFileName().toString());
+                                    fileEntity.setPath(entry.toString());
 
-                                fileEntity = fileRepository.save(fileEntity);
-                                currentScanResults.add(fileEntity);
+                                    fileEntity = fileRepository.save(fileEntity);
+                                    currentScanResults.add(fileEntity);
+                                } else {
+                                    FileEntity fileEntity = fileRepository.findByPath(String.valueOf(entry));
+                                    currentScanResults.add(fileEntity);
+                                    System.out.println("Took file from database");
+                                }
                             }
                         } catch (IOException e) {
                             System.out.println("Cannot access file size for: " + entry + " - " + e.getMessage());
@@ -212,7 +218,7 @@ public class ScanService {
 
     /// ////////////////////////////////////////////////////////////////////////////////
 
-    //By mask
+    // By mask
     private CompletableFuture<Void> scanRecursive(Path dir, String mask, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {
             if (cancelRequest.get()) {
@@ -230,13 +236,8 @@ public class ScanService {
                     if (Files.isDirectory(entry)) {
                         subTasks.add(scanRecursive(entry, mask, currentScanResults));
                     } else {
-                        if (FileMatcher.matchesMask(String.valueOf(entry.getFileName()), mask)) {
-                            FileEntity fileEntity = new FileEntity();
-                            fileEntity.setFileName(entry.getFileName().toString());
-                            fileEntity.setPath(entry.toString());
-
-                            fileEntity = fileRepository.save(fileEntity);
-                            currentScanResults.add(fileEntity);
+                        if (FileMatcher.matchesMask(entry.getFileName().toString(), mask)) {
+                            processFile(entry, currentScanResults);
                         }
                     }
                 }
@@ -252,10 +253,7 @@ public class ScanService {
         );
     }
 
-
-    //////////////////////////////////////////////////////////////////////////////////////
-
-    //By KB and mask
+    // By KB and mask
     private CompletableFuture<Void> scanRecursive(Path dir, String mask, Long[] kb, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {
             if (cancelRequest.get()) {
@@ -273,14 +271,9 @@ public class ScanService {
                     if (Files.isDirectory(entry)) {
                         subTasks.add(scanRecursive(entry, mask, kb, currentScanResults));
                     } else {
-                        if (FileMatcher.matchesMask(String.valueOf(entry.getFileName()), mask) &&
+                        if (FileMatcher.matchesMask(entry.getFileName().toString(), mask) &&
                                 FileMatcher.matchesKBBorders(entry, kb)) {
-                            FileEntity fileEntity = new FileEntity();
-                            fileEntity.setFileName(entry.getFileName().toString());
-                            fileEntity.setPath(entry.toString());
-
-                            fileEntity = fileRepository.save(fileEntity);
-                            currentScanResults.add(fileEntity);
+                            processFile(entry, currentScanResults);
                         }
                     }
                 }
@@ -296,10 +289,7 @@ public class ScanService {
         );
     }
 
-
-    /// /////////////////////////////////////////////////////////////////////////////////////
-
-    //By time
+    // By time
     private CompletableFuture<Void> scanRecursiveByTime(Path dir, String time, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {
             if (cancelRequest.get()) {
@@ -318,12 +308,7 @@ public class ScanService {
                         subTasks.add(scanRecursiveByTime(entry, time, currentScanResults));
                     } else {
                         if (FileMatcher.matchesTime(entry, time)) {
-                            FileEntity fileEntity = new FileEntity();
-                            fileEntity.setFileName(entry.getFileName().toString());
-                            fileEntity.setPath(entry.toString());
-
-                            fileEntity = fileRepository.save(fileEntity);
-                            currentScanResults.add(fileEntity);
+                            processFile(entry, currentScanResults);
                         }
                     }
                 }
@@ -339,10 +324,7 @@ public class ScanService {
         );
     }
 
-
-    /// ///////////////////////////////////////////////////////////////////////////
-
-    //By content
+    // By content
     private CompletableFuture<Void> scanRecursive(Path dir, String content, String mask, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {
             if (cancelRequest.get()) {
@@ -360,14 +342,9 @@ public class ScanService {
                     if (Files.isDirectory(entry)) {
                         subTasks.add(scanRecursive(entry, content, mask, currentScanResults));
                     } else {
-                        if (FileMatcher.matchesMask(String.valueOf(entry.getFileName()), mask) &&
+                        if (FileMatcher.matchesMask(entry.getFileName().toString(), mask) &&
                                 FileMatcher.matchesContent(entry, content)) {
-                            FileEntity fileEntity = new FileEntity();
-                            fileEntity.setFileName(entry.getFileName().toString());
-                            fileEntity.setPath(entry.toString());
-
-                            fileEntity = fileRepository.save(fileEntity);
-                            currentScanResults.add(fileEntity);
+                            processFile(entry, currentScanResults);
                         }
                     }
                 }
@@ -382,4 +359,21 @@ public class ScanService {
                 CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
         );
     }
+
+    private void processFile(Path entry, List<FileEntity> currentScanResults) {
+        String pathStr = entry.toString();
+        if (!fileRepository.existsByPath(pathStr)) {
+            FileEntity fileEntity = new FileEntity();
+            fileEntity.setFileName(entry.getFileName().toString());
+            fileEntity.setPath(pathStr);
+
+            fileEntity = fileRepository.save(fileEntity);
+            currentScanResults.add(fileEntity);
+        } else {
+            FileEntity fileEntity = fileRepository.findByPath(pathStr);
+            currentScanResults.add(fileEntity);
+            System.out.println("Took file from database");
+        }
+    }
+
 }
