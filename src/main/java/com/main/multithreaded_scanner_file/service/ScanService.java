@@ -163,8 +163,6 @@ public class ScanService {
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
-    /// //////////////////////////////////////////////////////////////////////////
-
     //By KB
     private CompletableFuture<Void> scanRecursive(Path dir, Long[] kb, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {
@@ -214,9 +212,6 @@ public class ScanService {
                 CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
         );
     }
-
-
-    /// ////////////////////////////////////////////////////////////////////////////////
 
     // By mask
     private CompletableFuture<Void> scanRecursive(Path dir, String mask, List<FileEntity> currentScanResults) {
@@ -375,5 +370,4 @@ public class ScanService {
             System.out.println("Took file from database");
         }
     }
-
 }
