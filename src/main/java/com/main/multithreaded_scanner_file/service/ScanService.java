@@ -163,6 +163,8 @@ public class ScanService {
         return fileMapper.toResponseDTO(path, currentScanResults);
     }
 
+    /// /////////////////////////////////////////////////////////////////////////////
+
     //By KB
     private CompletableFuture<Void> scanRecursive(Path dir, Long[] kb, List<FileEntity> currentScanResults) {
         return CompletableFuture.supplyAsync(() -> {

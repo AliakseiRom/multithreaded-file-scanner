@@ -1,10 +1,8 @@
 package com.main.multithreaded_scanner_file.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 @Entity(name = "file")
-@Data
 public class FileEntity {
 
     @Id
@@ -17,4 +15,16 @@ public class FileEntity {
 
     @Column(name = "file_name")
     private String fileName;
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 }
