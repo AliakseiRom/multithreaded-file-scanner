@@ -5,9 +5,27 @@
     </head>
     <body>
         <ul>
-            <li><button><a href="index.html">go home</a></button></li>
+            <li><button><a th:href="@{/}">go home</a></button></li>
         </ul>
 
-        <textarea name="" id="" rows="10" cols="35" placeholder="Enter the directory and mask"></textarea>
+
+        <form th:action="@{/scanth}" method="get">
+            <label>Path: 
+                <input type="text" name="path" placeholder="c:/myDir">
+            </label><br>
+            <label>Mask: 
+                <input type="text" name="mask" placeholder="*.txt">
+            </label><br>
+            <button type="submit">Start scanning</button>
+        </form>
+
+        <hr>
+
+        <div th:if="${result != null}">
+            <h2>Results for: <span th:text="${result.path}"></span></h2>
+            <ul>
+                <li th:each="file : ${result.files}" th:text="${file.path}"></li>
+            </ul>
+        </div>
     </body>
 </html>
