@@ -4,8 +4,30 @@
         <title>Scan by mask and kb</title>
     </head>
     <body>
+    <ul>
+        <li><button><a th:href="@{/}">go home</a></button></li>
+    </ul>
+
+    <form th:action="@{/scanthKBAndMask}" method="get">
+        <label>Path:
+            <input type="text" name="path" placeholder="c:/myDir">
+        </label><br>
+        <label>KB borders:
+            <input type="text" name="kb" placeholder="1, 2">
+        </label><br>
+        <label>Mask:
+            <input type="text" name="mask" placeholder="*.txt">
+        </label><br>
+        <button type="submit">Start scanning</button>
+    </form>
+
+    <hr>
+
+    <div th:if="${result != null}">
+        <h2>Results for: <span th:text="${result.path}"></span></h2>
         <ul>
-            <li><button><a href="index.html">go home</a></button></li>
+            <li th:each="file : ${result.files}" th:text="${file.path}"></li>
         </ul>
+    </div>
     </body>
 </html>

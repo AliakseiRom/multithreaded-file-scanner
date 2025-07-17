@@ -15,4 +15,24 @@ public class PageController {
     public String mask() {
         return "mask";
     }
+
+    @GetMapping("/kb")
+    public String kb() {
+        return "kb";
+    }
+
+    @GetMapping("/content")
+    public String content() {
+        return "content";
+    }
+
+    @GetMapping("/kbMask")
+    public String kbAndMask() {
+        return "kbAndMask";
+    }
+
+    @GetMapping("/time")
+    public String time() {
+        return "time";
+    }
 }
